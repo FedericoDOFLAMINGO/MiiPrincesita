@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para mi amorchito</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF6F0;
+    --blush:#F3C7D6;
+    --rose:#B23A5C;
+    --rose-deep:#8C2846;
+    --wine:#5C1930;
+    --gold:#C9A66B;
+    --plum:#341425;
+    --shadow: 0 20px 60px rgba(92,25,48,0.25);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% 10%, #fde4ec 0%, transparent 55%),
+      radial-gradient(circle at 85% 30%, #f7d3de 0%, transparent 50%),
+      linear-gradient(180deg, var(--cream) 0%, #FBEAEF 45%, var(--cream) 100%);
+    font-family:'Cormorant Garamond', serif;
+    color: var(--wine);
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  h1,h2,h3, .display{
+    font-family:'Playfair Display', serif;
+  }
+
+  /* ---------- floating hearts ambience ---------- */
+  #heartField{
+    position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden;
+  }
+  .floaty{
+    position:absolute; bottom:-10%;
+    color: var(--rose);
+    opacity:.35;
+    animation: floatUp linear infinite;
+    will-change: transform;
+  }
+  @keyframes floatUp{
+    0%{ transform: translateY(0) translateX(0) rotate(0deg); opacity:0; }
+    10%{ opacity:.4; }
+    90%{ opacity:.3; }
+    100%{ transform: translateY(-115vh) translateX(var(--drift,20px)) rotate(25deg); opacity:0; }
+  }
+
+  /* ---------- music toggle ---------- */
+  #musicToggle{
+    position:fixed; top:18px; right:18px; z-index:50;
+    width:52px; height:52px; border-radius:50%;
+    background: var(--cream);
+    border:1px solid var(--blush);
+    box-shadow: var(--shadow);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:20px; color:var(--rose-deep);
+    transition: transform .25s ease;
+  }
+  #musicToggle:hover{ transform: scale(1.08); }
+  #musicToggle.playing{ animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{box-shadow:0 0 0 0 rgba(178,58,92,.35);} 50%{box-shadow:0 0 0 10px rgba(178,58,92,0);} }
+
+  /* ---------- envelope screen ---------- */
+  #envelopeScreen{
+    position:fixed; inset:0; z-index:40;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: linear-gradient(180deg, #FBEAEF 0%, var(--cream) 100%);
+    transition: opacity 1s ease, visibility 1s ease;
+  }
+  #envelopeScreen.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+
+  #envelopeScreen p.hint{
+    margin-top:28px; font-size:1.15rem; letter-spacing:.03em; color:var(--rose-deep); opacity:.85;
+  }
+
+  .envelope{
+    position:relative; width:280px; height:190px; cursor:pointer;
+    filter: drop-shadow(0 18px 30px rgba(92,25,48,.25));
+  }
+  .envelope-body{
+    position:absolute; inset:0; top:38px;
+    background: linear-gradient(180deg, #fff 0%, #fdeef2 100%);
+    border-radius: 6px;
+    border: 1px solid var(--blush);
+  }
+  .envelope-flap{
+    position:absolute; top:0; left:0; width:100%; height:110px;
+    background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
+    clip-path: polygon(0 0, 100% 0, 50% 78%);
+    transform-origin: top center;
+    transition: transform .9s cubic-bezier(.65,0,.35,1);
+    z-index:3;
+    border-radius: 6px 6px 0 0;
+  }
+  .envelope.open .envelope-flap{ transform: rotateX(180deg); }
+
+  .seal{
+    position:absolute; left:50%; top:60px; transform:translate(-50%,0);
+    width:56px; height:56px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--gold), #a9822f 70%);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Playfair Display', serif; font-weight:700; color:#fff8ea;
+    font-size:22px; z-index:4; box-shadow: 0 4px 10px rgba(0,0,0,.25);
+    transition: transform .5s ease, opacity .5s ease;
+  }
+  .envelope.open .seal{ transform: translate(-50%,-10px) scale(0); opacity:0; }
+
+  .letter-peek{
+    position:absolute; left:8%; right:8%; top:20px; height:150px;
+    background:#fffdf9; border-radius:4px; z-index:1;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    transition: transform .9s cubic-bezier(.2,.9,.3,1) .15s;
+    transform: translateY(0);
+  }
+  .envelope.open .letter-peek{ transform: translateY(-64px); }
+
+  /* ---------- letter section ---------- */
+  main{
+    position:relative; z-index:2;
+    max-width: 760px; margin: 0 auto; padding: 90px 24px 60px;
+  }
+
+  .letter-card{
+    background: rgba(255,253,250,0.88);
+    backdrop-filter: blur(2px);
+    border: 1px solid var(--blush);
+    border-radius: 18px;
+    padding: 56px 48px;
+    box-shadow: var(--shadow);
+    position:relative;
+  }
+  .letter-card::before, .letter-card::after{
+    content:"❦";
+    position:absolute; color:var(--gold); font-size:22px; opacity:.8;
+  }
+  .letter-card::before{ top:18px; left:22px; }
+  .letter-card::after{ bottom:18px; right:22px; }
+
+  .eyebrow{
+    text-align:center; letter-spacing:.25em; text-transform:uppercase;
+    font-family:'Cormorant Garamond', serif; font-size:.85rem; color:var(--rose);
+    margin-bottom:6px;
+  }
+  h1.title{
+    text-align:center; font-size: clamp(2rem, 5vw, 2.8rem);
+    color: var(--wine); margin: 0 0 34px;
+    font-style: italic; font-weight:600;
+  }
+
+  .letter-body p{
+    font-size: clamp(1.15rem, 2vw, 1.35rem);
+    line-height: 1.75;
+    margin: 0 0 26px;
+    opacity:0; transform: translateY(16px);
+    transition: opacity .9s ease, transform .9s ease;
+  }
+  .letter-body p.visible{ opacity:1; transform: translateY(0); }
+  .letter-body p:first-of-type::first-letter{
+    font-family:'Playfair Display', serif;
+    font-size: 3.1rem; float:left; line-height:.8; padding: 6px 8px 0 0;
+    color: var(--rose-deep); font-style:normal;
+  }
+
+  .signature{
+    text-align:right; margin-top: 44px; font-style: italic; font-size:1.3rem;
+    color: var(--rose-deep);
+  }
+  .signature span{ display:block; font-family:'Playfair Display', serif; font-size:1.6rem; margin-top:4px; }
+
+  /* ---------- pet name cards ---------- */
+  .pets{
+    margin: 64px 0 10px;
+    display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+  }
+  @media (max-width: 620px){ .pets{ grid-template-columns: 1fr; } }
+
+  .flip-card{ perspective: 1200px; height: 150px; }
+  .flip-inner{
+    position:relative; width:100%; height:100%; text-align:center;
+    transition: transform .7s cubic-bezier(.2,.9,.3,1);
+    transform-style: preserve-3d; cursor:pointer;
+  }
+  .flip-card.flipped .flip-inner{ transform: rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:14px; display:flex; align-items:center; justify-content:center;
+    padding:14px; box-shadow: 0 10px 22px rgba(92,25,48,.15);
+  }
+  .flip-front{
+    background: linear-gradient(160deg, #fff 0%, #fdeef2 100%);
+    border:1px solid var(--blush);
+    font-family:'Playfair Display', serif; font-style:italic; font-size:1.15rem; color:var(--rose-deep);
+  }
+  .flip-back{
+    background: linear-gradient(160deg, var(--rose) 0%, var(--rose-deep) 100%);
+    color:#fff6ee; transform: rotateY(180deg); font-size:1.02rem; line-height:1.4;
+  }
+
+  .pets-hint{ text-align:center; font-size:.95rem; color:var(--rose); opacity:.75; margin-bottom: 8px;}
+
+  /* ---------- photo section ---------- */
+  .photo-section{
+    margin: 44px 0 10px; text-align:center;
+    opacity:0; transform: translateY(24px) scale(.96);
+    max-height:0; overflow:hidden; pointer-events:none;
+    transition: opacity 1s ease, transform 1s ease, max-height 1s ease, margin 1s ease;
+  }
+  .photo-section.revealed{
+    opacity:1; transform: translateY(0) scale(1);
+    max-height: 640px; pointer-events:auto;
+    margin: 44px 0 40px;
+  }
+  .photo-frame{
+    width: min(78vw, 340px);
+    aspect-ratio: 1 / 0.95;
+    margin: 0 auto;
+    display:block;
+    clip-path: url(#heartClip);
+    object-fit: cover;
+    box-shadow: 0 20px 45px rgba(92,25,48,.3);
+    transition: transform .4s ease;
+    background: var(--blush);
+  }
+  .photo-frame:hover{ transform: scale(1.03) rotate(-1deg); }
+  .photo-caption{
+    margin-top: 18px; font-style: italic; font-size:1.15rem; color:var(--rose-deep);
+  }
+  .photo-fallback{
+    width:min(78vw,340px); aspect-ratio:1/0.95; margin:0 auto;
+    clip-path:url(#heartClip);
+    background: linear-gradient(160deg,#fdeef2,#f6c9d8);
+    display:none; align-items:center; justify-content:center;
+    color:var(--rose-deep); font-family:'Playfair Display',serif; font-style:italic; font-size:1rem; text-align:center; padding: 20px;
+  }
+  .photo-fallback.show{ display:flex; }
+  #photoImg.broken{ display:none; }
+
+  /* ---------- finale ---------- */
+  .finale{
+    text-align:center; margin: 90px 0 40px;
+  }
+  #loveBtn{
+    font-family:'Playfair Display', serif; font-style:italic; font-size:1.2rem;
+    background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+    color:#fff6ee; border:none; padding: 16px 38px; border-radius: 999px;
+    cursor:pointer; box-shadow: var(--shadow);
+    transition: transform .25s ease;
+  }
+  #loveBtn:hover{ transform: scale(1.05); }
+  .finale-msg{
+    margin-top: 26px; font-size:1.3rem; color:var(--rose-deep); font-style:italic;
+    min-height: 1.6rem;
+  }
+
+  #burstLayer{ position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden;}
+  .burst-heart{
+    position:absolute; bottom:-5%; font-size: 22px; color: var(--rose);
+    animation: burstUp 2.4s ease-out forwards;
+  }
+  @keyframes burstUp{
+    0%{ transform: translateY(0) scale(.6); opacity:1;}
+    100%{ transform: translateY(-100vh) scale(1.2) rotate(30deg); opacity:0;}
+  }
+
+  footer{ text-align:center; padding: 30px 0 60px; color: var(--rose); opacity:.7; font-size:.9rem; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- hidden SVG heart clip path definition -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <clipPath id="heartClip" clipPathUnits="objectBoundingBox">
+      <path d="M0.5,0.92 C0.2,0.68 0,0.46 0,0.27 C0,0.10 0.13,0 0.27,0 C0.38,0 0.46,0.07 0.5,0.19 C0.54,0.07 0.62,0 0.73,0 C0.87,0 1,0.10 1,0.27 C1,0.46 0.8,0.68 0.5,0.92 Z"/>
+    </clipPath>
+  </defs>
+</svg>
+
+<div id="heartField"></div>
+
+<audio id="bgMusic" src="love.mp3" loop preload="auto"></audio>
+<button id="musicToggle" aria-label="Reproducir música" title="Música">♪</button>
+
+<!-- ENVELOPE INTRO -->
+<div id="envelopeScreen">
+  <div class="envelope" id="envelope">
+    <div class="letter-peek"></div>
+    <div class="envelope-body"></div>
+    <div class="envelope-flap"></div>
+    <div class="seal">A</div>
+  </div>
+  <p class="hint">toca el sobre, mi amor</p>
+</div>
+
+<main>
+  <div class="letter-card">
+    <p class="eyebrow">Para ti</p>
+    <h1 class="title">Mi amorchito</h1>
+
+    <div class="letter-body" id="letterBody">
+      <p>Hoy quiero decirte, otra vez y las veces que hagan falta, que te quiero tanto que a veces no encuentro las palabras exactas para explicarlo. Te adoro, mi niña linda, con una certeza que no necesita pensarse dos veces.</p>
+      <p>Eres todo para mí. No es una frase bonita nada más: es lo que siento cada vez que pienso en ti, cada vez que apareces en mi cabeza sin avisar y me sacas una sonrisa. Eres mi vida, mi princesita linda, la razón por la que los días buenos se sienten mejores y los días difíciles se vuelven ligeros.</p>
+      <p>Quiero que lo sepas hoy y siempre: eres todo lo que voy a querer para toda mi vida. Mi amorchito lindo, mi niña, mi princesita, no hay nadie más con quien prefiera construir esto. Eres exactamente todo lo que siempre voy a querer.</p>
+    </div>
+
+    <div class="signature">
+      Con todo mi corazón,
+      <span>Hermenejildo</span>
+    </div>
+  </div>
+
+  <p class="pets-hint">toca cada tarjeta, princesita</p>
+  <div class="pets" id="pets">
+    <div class="flip-card"><div class="flip-inner">
+      <div class="flip-face flip-front">mi niña linda</div>
+      <div class="flip-face flip-back">Eres la persona más bonita que conozco, por dentro y por fuera.</div>
+    </div></div>
+    <div class="flip-card"><div class="flip-inner">
+      <div class="flip-face flip-front">mi amorchito</div>
+      <div class="flip-face flip-back">Pensar en ti me cambia el día completo, siempre para bien.</div>
+    </div></div>
+    <div class="flip-card"><div class="flip-inner">
+      <div class="flip-face flip-front">mi princesita linda</div>
+      <div class="flip-face flip-back">Contigo quiero todo: lo simple y lo grande, hoy y siempre.</div>
+    </div></div>
+  </div>
+
+  <div class="finale">
+    <p class="pets-hint">tócalo, mi amor</p>
+    <button id="loveBtn">te amo 🤍</button>
+    <p class="finale-msg" id="finaleMsg"></p>
+
+    <div class="photo-section" id="photoSection">
+      <img src="amor.jpg" alt="Foto de mi amor" class="photo-frame" id="photoImg">
+      <div id="photoFallback" class="photo-fallback">coloca aquí "amor.jpg" junto a este archivo</div>
+      <p class="photo-caption">tú, mi persona favorita</p>
+    </div>
+  </div>
+
+  <footer>hecho con todo mi cariño para ti</footer>
+</main>
+
+<div id="burstLayer"></div>
+
+<script>
+  // floating ambient hearts
+  const field = document.getElementById('heartField');
+  const heartChars = ['♥','❤','❥'];
+  for(let i=0;i<22;i++){
+    const h = document.createElement('span');
+    h.className='floaty';
+    h.textContent = heartChars[Math.floor(Math.random()*heartChars.length)];
+    h.style.left = Math.random()*100+'vw';
+    h.style.fontSize = (14+Math.random()*20)+'px';
+    h.style.setProperty('--drift', (Math.random()*80-40)+'px');
+    h.style.animationDuration = (10+Math.random()*12)+'s';
+    h.style.animationDelay = (Math.random()*14)+'s';
+    field.appendChild(h);
+  }
+
+  // envelope + music
+  const envelope = document.getElementById('envelope');
+  const envelopeScreen = document.getElementById('envelopeScreen');
+  const audio = document.getElementById('bgMusic');
+  const musicToggle = document.getElementById('musicToggle');
+  let opened = false;
+
+  envelope.addEventListener('click', () => {
+    if(opened) return;
+    opened = true;
+    envelope.classList.add('open');
+    audio.play().then(()=>musicToggle.classList.add('playing')).catch(()=>{});
+    setTimeout(()=>{ envelopeScreen.classList.add('hidden'); }, 1200);
+  });
+
+  musicToggle.addEventListener('click', () => {
+    if(audio.paused){
+      audio.play().then(()=>musicToggle.classList.add('playing')).catch(()=>{});
+    } else {
+      audio.pause();
+      musicToggle.classList.remove('playing');
+    }
+  });
+
+  // reveal letter paragraphs on scroll
+  const paras = document.querySelectorAll('.letter-body p');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, {threshold:.3});
+  paras.forEach(p=>io.observe(p));
+
+  // flip cards
+  document.querySelectorAll('.flip-card').forEach(card=>{
+    card.addEventListener('click', ()=> card.classList.toggle('flipped'));
+  });
+
+  // photo load / fallback handling
+  const photoImg = document.getElementById('photoImg');
+  const photoFallback = document.getElementById('photoFallback');
+  photoImg.addEventListener('error', ()=>{
+    photoImg.classList.add('broken');
+    photoFallback.classList.add('show');
+  });
+
+  // finale burst
+  const loveBtn = document.getElementById('loveBtn');
+  const finaleMsg = document.getElementById('finaleMsg');
+  const burstLayer = document.getElementById('burstLayer');
+  const photoSection = document.getElementById('photoSection');
+  const messages = [
+    'te amo, mi amorchito.',
+    'para siempre, mi niña linda.',
+    'eres todo lo que quiero.',
+    'mi princesita, hoy y siempre.',
+    'no hay nadie más, mi vida.'
+  ];
+  let msgIndex = 0;
+  loveBtn.addEventListener('click', ()=>{
+    finaleMsg.textContent = messages[msgIndex % messages.length];
+    msgIndex++;
+    photoSection.classList.add('revealed');
+    for(let i=0;i<26;i++){
+      const h = document.createElement('span');
+      h.className='burst-heart';
+      h.textContent = heartChars[Math.floor(Math.random()*heartChars.length)];
+      h.style.left = Math.random()*100+'vw';
+      h.style.animationDelay = (Math.random()*.6)+'s';
+      h.style.fontSize = (16+Math.random()*20)+'px';
+      burstLayer.appendChild(h);
+      setTimeout(()=>h.remove(), 3000);
+    }
+  });
+
+  // photo fallback check (in case image loads slowly, onerror already handles missing file)
+</script>
+</body>
+</html>
